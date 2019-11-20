@@ -133,15 +133,30 @@ fit_emp_tidy <- fit_emp_tidy %>%
     c95 = estimate + 1.96 * std.error
   )
 
-fit_emp_tidy %>% 
+plt_emp <- fit_emp_tidy %>% 
+  mutate(
+    last_use = fct_relevel(last_use, "ever", "year", "month"),
+    drug = str_remove(drug, "last_use_") %>% str_to_title()
+  ) %>% 
   
   ggplot(aes(last_use, estimate)) + 
   geom_segment(aes(xend = last_use, y = c5, yend = c95)) + 
-  geom_point(shape = 21, fill = "tomato") + 
-  geom_hline(yintercept = 0) + 
-  
-  facet_wrap(vars(drug)) + 
-  coord_flip()
+  geom_hline(yintercept = 0, lwd = 1) + 
+  geom_point(shape = 21, size = 2, fill = "tomato") + 
+  scale_y_continuous(limits = c(-0.25, 0.25), expand = c(0, 0)) +
+  facet_wrap(vars(drug), ncol = 2, scales = "free_x") + 
+  coord_flip() + 
+  labs(
+    x = NULL, 
+    y = "estimated effect on employment rate of having most recently used a drug\n in the last month, last year, or ever compared to never having used it at all", 
+    title = "Relating Employment Rates and Most Recent Drug Use", 
+    subtitle = "some show promise as part of an employment services continuum", 
+    caption = "2015 National Survey of Drug Use and Health Public Use Microdata File"
+  ) + 
+  bptheme::theme_blueprint(grid = "Xx", base_size = 10) + 
+  theme(strip.text = element_text(hjust = 0.5), plot.title.position = "plot") 
+
+ggsave("output/drug-use-and-employment-rates.png", height = 10, width = 7, units = "in", dpi = 300, type = "cairo-png", plot = plt_emp)
 
 
 
